@@ -20,8 +20,7 @@ import { EnvKeys } from './common/enum/env-keys';
         DB_USERNAME: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
         DB_DATABASE: Joi.string().required(),
-        JWT_SECRET_ADMIN: Joi.string().required(),
-        JWT_SECRET_USER: Joi.string().required(),
+        JWT_SECRET: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
