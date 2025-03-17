@@ -8,6 +8,8 @@ import { User } from 'src/user/entity/user.entity';
 import { Repository } from 'typeorm';
 import { Reflector } from '@nestjs/core';
 import { Public } from '../decorator/public';
+import { ROLE } from '../enum/role';
+import { RBAC } from '../decorator/rbac';
 
 export class JwtGuard implements CanActivate {
   constructor(
@@ -16,13 +18,15 @@ export class JwtGuard implements CanActivate {
 
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly reflector: Reflector
-  ) { }
+    private readonly reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
 
     const isPublic = this.reflector.get(Public, context.getHandler());
+    const role = this.reflector.get<ROLE>(RBAC, context.getHandler());
+
     if (isPublic) {
       return true;
     }
@@ -35,14 +39,16 @@ export class JwtGuard implements CanActivate {
         throw new InvalidTokenFormatException();
       }
 
-      const userEmail = await this.userRepository.findOne({
+      const user = await this.userRepository.findOne({
         where: { email: this.jwtService.decode(token).email },
-        select: ['email'],
+        select: ['email', 'role'],
       });
-      if (!userEmail) throw new InvalidTokenFormatException();
+
+      if (!user) throw new InvalidTokenFormatException();
+      if (user.role > role) throw new InvalidTokenFormatException();
 
       req.user = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get(EnvKeys.JWT_SECRET_USER),
+        secret: this.configService.get(EnvKeys.JWT_SECRET),
       });
     } catch (err) {
       throw new InvalidTokenFormatException();
@@ -51,4 +57,3 @@ export class JwtGuard implements CanActivate {
     return true;
   }
 }
-
