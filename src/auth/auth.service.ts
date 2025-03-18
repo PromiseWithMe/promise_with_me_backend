@@ -26,11 +26,11 @@ export class AuthService {
   async _gereateToken(email: string) {
     return new TokensResponse(
       await this.jwtService.signAsync(
-        { email: email },
+        { email: email, isRefresh: false },
         { secret: this.configService.get(EnvKeys.JWT_SECRET) },
       ),
       await this.jwtService.signAsync(
-        { email: email },
+        { email: email, isRefresh: true },
         { secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH) },
       ),
     );
