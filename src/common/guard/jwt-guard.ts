@@ -10,6 +10,7 @@ import { Reflector } from '@nestjs/core';
 import { Public } from '../decorator/public';
 import { ROLE } from '../enum/role';
 import { RBAC } from '../decorator/rbac';
+import { IsRefresh } from '../decorator/is-refresh';
 
 export class JwtGuard implements CanActivate {
   constructor(
@@ -25,6 +26,7 @@ export class JwtGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
 
     const isPublic = this.reflector.get(Public, context.getHandler());
+    const isRefresh = this.reflector.get(IsRefresh, context.getHandler());
     const role = this.reflector.get<ROLE>(RBAC, context.getHandler());
 
     if (isPublic) {
@@ -47,9 +49,15 @@ export class JwtGuard implements CanActivate {
       if (!user) throw new InvalidTokenFormatException();
       if (user.role > role) throw new InvalidTokenFormatException();
 
-      req.user = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get(EnvKeys.JWT_SECRET),
-      });
+      if(isRefresh) {
+        await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH),
+        });
+      } else {
+        req.user = await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get(EnvKeys.JWT_SECRET),
+        });
+      }
     } catch (err) {
       throw new InvalidTokenFormatException();
     }
