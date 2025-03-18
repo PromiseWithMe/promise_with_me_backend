@@ -27,11 +27,17 @@ export class AuthService {
     return new TokensResponse(
       await this.jwtService.signAsync(
         { email: email, isRefresh: false },
-        { secret: this.configService.get(EnvKeys.JWT_SECRET) },
+        {
+          secret: this.configService.get(EnvKeys.JWT_SECRET),
+          expiresIn: '10h',
+        },
       ),
       await this.jwtService.signAsync(
         { email: email, isRefresh: true },
-        { secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH) },
+        {
+          secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH),
+          expiresIn: '7d',
+        },
       ),
     );
   }
@@ -66,9 +72,9 @@ export class AuthService {
       where: { email },
       select: ['email', 'password'],
     });
-    if(!user) throw new LoginFailException();
+    if (!user) throw new LoginFailException();
 
-    if(!await bcrypt.compare(password, user.password)) {
+    if (!(await bcrypt.compare(password, user.password))) {
       throw new LoginFailException();
     }
 
