@@ -49,8 +49,8 @@ export class JwtGuard implements CanActivate {
       if (!user) throw new InvalidTokenFormatException();
       if (user.role > role) throw new InvalidTokenFormatException();
 
-      if(isRefresh) {
-        await this.jwtService.verifyAsync(token, {
+      if (isRefresh) {
+        req.user = await this.jwtService.verifyAsync(token, {
           secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH),
         });
       } else {

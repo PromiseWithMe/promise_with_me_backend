@@ -80,4 +80,8 @@ export class AuthService {
 
     return this._gereateToken(email);
   }
+
+  async reIssue(userEmail: string) {
+    return this._gereateToken(userEmail);
+  }
 }
