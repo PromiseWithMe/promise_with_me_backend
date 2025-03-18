@@ -8,6 +8,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './common/guard/jwt-guard';
 import { EnvKeys } from './common/enum/env-keys';
+import { PromiseModule } from './promise/promise.module';
+import { User } from './user/entity/user.entity';
+import { Promise } from './promise/entity/promise.entity';
 
 @Module({
   imports: [
@@ -33,13 +36,14 @@ import { EnvKeys } from './common/enum/env-keys';
         username: configService.get(EnvKeys.DB_USERNAME),
         password: configService.get(EnvKeys.DB_PASSWORD),
         database: configService.get(EnvKeys.DB_DATABASE),
-        autoLoadEntities: true,
+        entities: [User, Promise],
         synchronize: true,
       }),
     }),
     JwtModule.register({ global: true }),
     AuthModule,
     UserModule,
+    PromiseModule,
   ],
   controllers: [],
   providers: [

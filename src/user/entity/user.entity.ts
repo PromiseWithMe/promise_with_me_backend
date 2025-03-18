@@ -1,5 +1,6 @@
 import { ROLE } from 'src/common/enum/role';
-import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+import { Promise } from 'src/promise/entity/promise.entity';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity('user')
 export class User {
@@ -40,4 +41,7 @@ export class User {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(() => Promise, (promise) => promise.user)
+  promises: Promise[]
 }
