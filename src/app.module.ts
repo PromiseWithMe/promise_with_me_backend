@@ -21,6 +21,7 @@ import { EnvKeys } from './common/enum/env-keys';
         DB_PASSWORD: Joi.string().required(),
         DB_DATABASE: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
+        JWT_SECRET_REFRESH: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
