@@ -6,6 +6,7 @@ import { CreatePromiseRequest } from './dto/request/create-promise.request';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/custom-exception/user-not-found.exception';
 import { ServerException } from 'src/exception/custom-exception/server.exception';
+import { GetPromsieRequest } from './dto/request/get-promise.request';
 
 @Injectable()
 export class PromiseService {
@@ -29,7 +30,6 @@ export class PromiseService {
     if (!user) throw new UserNotFoundException();
 
     const qr = this.datasource.createQueryRunner();
-
     await qr.connect();
     await qr.startTransaction();
 
@@ -49,6 +49,21 @@ export class PromiseService {
       throw new ServerException();
     } finally {
       await qr.release();
+    }
+  }
+
+  async getPromises(userEmail: string, getPromsieRequest: GetPromsieRequest) {
+    try {
+      const takeNumber = 10;
+      const { page = 0 } = getPromsieRequest;
+
+      return await this.promiseRepository.find({
+        where: { user: { email: userEmail } },
+        skip: page * takeNumber,
+        take: takeNumber,
+      });
+    } catch (error) {
+      throw new ServerException();
     }
   }
 }
