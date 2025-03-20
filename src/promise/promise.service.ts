@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promise } from './entity/promise.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -7,6 +7,9 @@ import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/custom-exception/user-not-found.exception';
 import { ServerException } from 'src/exception/custom-exception/server.exception';
 import { GetPromsieRequest } from './dto/request/get-promise.request';
+import { UpdatePromiseRequest } from './dto/request/update-promise.request';
+import { HttpException } from 'src/exception/http.exception';
+import { PromiseNotFoundException } from 'src/exception/custom-exception/promise-not-found.exception';
 
 @Injectable()
 export class PromiseService {
@@ -45,6 +48,44 @@ export class PromiseService {
     } catch (error) {
       await qr.rollbackTransaction();
       console.log(error);
+
+      throw new ServerException();
+    } finally {
+      await qr.release();
+    }
+  }
+
+  async updatePromise(
+    promiseId: string,
+    userEmail: string,
+    updatePromiseRequest: UpdatePromiseRequest,
+  ) {
+    const { title, dayOfWeek } = updatePromiseRequest;
+
+    const qr = this.datasource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      const result = await qr.manager.update(
+        Promise,
+        { id: promiseId, user: { email: userEmail } },
+        {
+          title,
+          dayOfWeek: dayOfWeek ? dayOfWeek.toString() : undefined,
+        },
+      );
+
+      if (result.affected === 0) {
+        throw new PromiseNotFoundException();
+      }
+
+      await qr.commitTransaction();
+      return true;
+    } catch (error) {
+      await qr.rollbackTransaction();
+
+      if (error instanceof HttpException) throw error;
 
       throw new ServerException();
     } finally {
