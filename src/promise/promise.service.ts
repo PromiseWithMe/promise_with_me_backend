@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promise } from './entity/promise.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -10,6 +10,8 @@ import { GetPromsieRequest } from './dto/request/get-promise.request';
 import { UpdatePromiseRequest } from './dto/request/update-promise.request';
 import { HttpException } from 'src/exception/http.exception';
 import { PromiseNotFoundException } from 'src/exception/custom-exception/promise-not-found.exception';
+import { PromiseState } from 'src/common/enum/promise-state';
+import { ChangePromiseStateRequest } from './dto/request/change-promise-state.request';
 
 @Injectable()
 export class PromiseService {
@@ -52,6 +54,21 @@ export class PromiseService {
       throw new ServerException();
     } finally {
       await qr.release();
+    }
+  }
+
+  async getPromises(userEmail: string, getPromsieRequest: GetPromsieRequest) {
+    try {
+      const takeNumber = 10;
+      const { page = 0 } = getPromsieRequest;
+
+      return await this.promiseRepository.find({
+        where: { user: { email: userEmail } },
+        skip: page * takeNumber,
+        take: takeNumber,
+      });
+    } catch (error) {
+      throw new ServerException();
     }
   }
 
@@ -121,18 +138,20 @@ export class PromiseService {
     }
   }
 
-  async getPromises(userEmail: string, getPromsieRequest: GetPromsieRequest) {
-    try {
-      const takeNumber = 10;
-      const { page = 0 } = getPromsieRequest;
+  async changePromiseState(
+    promiseId: string,
+    userEmail: string,
+    changePromiseStateRequest: ChangePromiseStateRequest,
+  ) {
+    const result = await this.promiseRepository.update(
+      { id: promiseId, user: { email: userEmail } },
+      { promiseState: PromiseState[changePromiseStateRequest.promiseState] },
+    );
 
-      return await this.promiseRepository.find({
-        where: { user: { email: userEmail } },
-        skip: page * takeNumber,
-        take: takeNumber,
-      });
-    } catch (error) {
-      throw new ServerException();
+    if (result.affected === 0) {
+      throw new PromiseNotFoundException();
     }
+
+    return true;
   }
 }
