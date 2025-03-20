@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
 
-export class GetPromsieRequest {
+export class GetPromsiesRequest {
   @IsNotEmpty()
   @IsOptional()
   @Min(0, { message: '음수인 페이지는 없어요' })

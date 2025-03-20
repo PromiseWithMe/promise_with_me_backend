@@ -6,12 +6,13 @@ import { CreatePromiseRequest } from './dto/request/create-promise.request';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/custom-exception/user-not-found.exception';
 import { ServerException } from 'src/exception/custom-exception/server.exception';
-import { GetPromsieRequest } from './dto/request/get-promise.request';
+import { GetPromsiesRequest } from './dto/request/get-promises.request';
 import { UpdatePromiseRequest } from './dto/request/update-promise.request';
 import { HttpException } from 'src/exception/http.exception';
 import { PromiseNotFoundException } from 'src/exception/custom-exception/promise-not-found.exception';
 import { PromiseState } from 'src/common/enum/promise-state';
 import { ChangePromiseStateRequest } from './dto/request/change-promise-state.request';
+import { GetPromisesResponse } from './dto/response/get-promises.response';
 
 @Injectable()
 export class PromiseService {
@@ -57,16 +58,18 @@ export class PromiseService {
     }
   }
 
-  async getPromises(userEmail: string, getPromsieRequest: GetPromsieRequest) {
+  async getPromises(userEmail: string, getPromsiesRequest: GetPromsiesRequest) {
     try {
       const takeNumber = 10;
-      const { page = 0 } = getPromsieRequest;
+      const { page = 0 } = getPromsiesRequest;
 
-      return await this.promiseRepository.find({
-        where: { user: { email: userEmail } },
-        skip: page * takeNumber,
-        take: takeNumber,
-      });
+      return new GetPromisesResponse(
+        await this.promiseRepository.find({
+          where: { user: { email: userEmail } },
+          skip: page * takeNumber,
+          take: takeNumber,
+        }),
+      );
     } catch (error) {
       throw new ServerException();
     }

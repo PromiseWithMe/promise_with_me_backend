@@ -11,7 +11,7 @@ import {
 import { PromiseService } from './promise.service';
 import { CreatePromiseRequest } from './dto/request/create-promise.request';
 import { GetUserEmail } from 'src/common/decorator/get-user';
-import { GetPromsieRequest } from './dto/request/get-promise.request';
+import { GetPromsiesRequest } from './dto/request/get-promises.request';
 import { UpdatePromiseRequest } from './dto/request/update-promise.request';
 import { UUIDCheckPipe } from 'src/common/pipe/uuid-check.pipe';
 import { ChangePromiseStateRequest } from './dto/request/change-promise-state.request';
@@ -31,7 +31,7 @@ export class PromiseController {
   @Get()
   getPromises(
     @GetUserEmail() userEmail: string,
-    @Query() getPromsieRequest: GetPromsieRequest,
+    @Query() getPromsieRequest: GetPromsiesRequest,
   ) {
     return this.promiseService.getPromises(userEmail, getPromsieRequest);
   }
