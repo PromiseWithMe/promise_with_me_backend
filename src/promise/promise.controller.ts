@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -14,8 +13,8 @@ import { CreatePromiseRequest } from './dto/request/create-promise.request';
 import { GetUserEmail } from 'src/common/decorator/get-user';
 import { GetPromsieRequest } from './dto/request/get-promise.request';
 import { UpdatePromiseRequest } from './dto/request/update-promise.request';
-import { IsNotUUidException } from 'src/exception/custom-exception/is-not-uuid.exception';
 import { UUIDCheckPipe } from 'src/common/pipe/uuid-check.pipe';
+import { ChangePromiseStateRequest } from './dto/request/change-promise-state.request';
 
 @Controller('promise')
 export class PromiseController {
@@ -29,10 +28,17 @@ export class PromiseController {
     return this.promiseService.createPromise(userEmail, createPromiseRequest);
   }
 
+  @Get()
+  getPromises(
+    @GetUserEmail() userEmail: string,
+    @Query() getPromsieRequest: GetPromsieRequest,
+  ) {
+    return this.promiseService.getPromises(userEmail, getPromsieRequest);
+  }
+
   @Patch('/:id')
   updatePromise(
-    @Param('id', UUIDCheckPipe)
-    id: string,
+    @Param('id', UUIDCheckPipe) id: string,
     @GetUserEmail() userEmail: string,
     @Body() updatePromiseRequest: UpdatePromiseRequest,
   ) {
@@ -45,18 +51,22 @@ export class PromiseController {
 
   @Delete('/:id')
   deletePromise(
-    @Param('id', UUIDCheckPipe)
-    id: string,
+    @Param('id', UUIDCheckPipe) id: string,
     @GetUserEmail() userEmail: string,
   ) {
     return this.promiseService.deletePromise(id, userEmail);
   }
 
-  @Get()
-  getPromises(
+  @Patch('/change-state/:id')
+  changePromiseState(
+    @Param('id', UUIDCheckPipe) id: string,
     @GetUserEmail() userEmail: string,
-    @Query() getPromsieRequest: GetPromsieRequest,
+    @Body() changePromiseStateRequest: ChangePromiseStateRequest,
   ) {
-    return this.promiseService.getPromises(userEmail, getPromsieRequest);
+    return this.promiseService.changePromiseState(
+      id,
+      userEmail,
+      changePromiseStateRequest,
+    );
   }
 }
