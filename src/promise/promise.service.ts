@@ -93,6 +93,34 @@ export class PromiseService {
     }
   }
 
+  async deletePromise(promiseId: string, userEmail: string) {
+    const qr = this.datasource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      const result = await this.promiseRepository.delete({
+        id: promiseId,
+        user: { email: userEmail },
+      });
+
+      if (result.affected === 0) {
+        throw new PromiseNotFoundException();
+      }
+
+      await qr.commitTransaction();
+      return true;
+    } catch (error) {
+      await qr.rollbackTransaction();
+
+      if (error instanceof HttpException) throw error;
+
+      throw new ServerException();
+    } finally {
+      await qr.release();
+    }
+  }
+
   async getPromises(userEmail: string, getPromsieRequest: GetPromsieRequest) {
     try {
       const takeNumber = 10;
