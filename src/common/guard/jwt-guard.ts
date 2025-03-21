@@ -25,39 +25,36 @@ export class JwtGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
 
-    const isPublic = this.reflector.get(Public, context.getHandler());
-    const isRefresh = this.reflector.get(IsRefresh, context.getHandler());
-    const role = this.reflector.get<ROLE>(RBAC, context.getHandler());
-
-    if (isPublic) {
+    if (this.reflector.get(Public, context.getHandler())) {
       return true;
     }
 
     try {
       const rawToken = req.headers.authorization;
-      const [bearer, token] = rawToken.split(' ');
+      if (!rawToken) throw new InvalidTokenFormatException();
 
-      if (bearer.toLowerCase() !== 'bearer') {
+      const [bearer, token] = rawToken.split(' ');
+      if (bearer.toLowerCase() !== 'bearer')
         throw new InvalidTokenFormatException();
-      }
 
       const user = await this.userRepository.findOne({
         where: { email: this.jwtService.decode(token).email },
         select: ['email', 'role'],
       });
-
       if (!user) throw new InvalidTokenFormatException();
-      if (user.role > role) throw new InvalidTokenFormatException();
 
-      if (isRefresh) {
-        req.user = await this.jwtService.verifyAsync(token, {
-          secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH),
-        });
-      } else {
-        req.user = await this.jwtService.verifyAsync(token, {
-          secret: this.configService.get(EnvKeys.JWT_SECRET),
-        });
+      const requiredRole = this.reflector.get<ROLE>(RBAC, context.getHandler());
+      if (requiredRole !== undefined && user.role > requiredRole) {
+        throw new InvalidTokenFormatException();
       }
+
+      const secretKey = this.reflector.get(IsRefresh, context.getHandler())
+        ? this.configService.get(EnvKeys.JWT_SECRET_REFRESH)
+        : this.configService.get(EnvKeys.JWT_SECRET);
+
+      req.user = await this.jwtService.verifyAsync(token, {
+        secret: secretKey,
+      });
     } catch (err) {
       throw new InvalidTokenFormatException();
     }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promise } from './entity/promise.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { CreatePromiseRequest } from './dto/request/create-promise.request';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/custom-exception/user-not-found.exception';
@@ -26,36 +26,24 @@ export class PromiseService {
   ) {}
 
   async createPromise(
+    entityManager: EntityManager,
     userEmail: string,
     createPromiseRequest: CreatePromiseRequest,
   ) {
     const { title, dayOfWeek } = createPromiseRequest;
-    const user = await this.userRepository.findOne({
+
+    const user = await entityManager.findOne(User, {
       where: { email: userEmail },
     });
     if (!user) throw new UserNotFoundException();
 
-    const qr = this.datasource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
+    await entityManager.save(Promise, {
+      title,
+      dayOfWeek: dayOfWeek.length === 0 ? null : dayOfWeek.toString(),
+      user,
+    });
 
-    try {
-      await qr.manager.save(Promise, {
-        title,
-        dayOfWeek: dayOfWeek.toString(),
-        user,
-      });
-
-      await qr.commitTransaction();
-      return true;
-    } catch (error) {
-      await qr.rollbackTransaction();
-      console.log(error);
-
-      throw new ServerException();
-    } finally {
-      await qr.release();
-    }
+    return true;
   }
 
   async getPromises(userEmail: string, getPromsiesRequest: GetPromsiesRequest) {
@@ -76,69 +64,44 @@ export class PromiseService {
   }
 
   async updatePromise(
+    entityManager: EntityManager,
     promiseId: string,
     userEmail: string,
     updatePromiseRequest: UpdatePromiseRequest,
   ) {
     const { title, dayOfWeek } = updatePromiseRequest;
 
-    const qr = this.datasource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
+    const result = await entityManager.update(
+      Promise,
+      { id: promiseId, user: { email: userEmail } },
+      {
+        title,
+        dayOfWeek: dayOfWeek ? dayOfWeek.toString() : undefined,
+      },
+    );
 
-    try {
-      const result = await qr.manager.update(
-        Promise,
-        { id: promiseId, user: { email: userEmail } },
-        {
-          title,
-          dayOfWeek: dayOfWeek ? dayOfWeek.toString() : undefined,
-        },
-      );
-
-      if (result.affected === 0) {
-        throw new PromiseNotFoundException();
-      }
-
-      await qr.commitTransaction();
-      return true;
-    } catch (error) {
-      await qr.rollbackTransaction();
-
-      if (error instanceof HttpException) throw error;
-
-      throw new ServerException();
-    } finally {
-      await qr.release();
+    if (result.affected === 0) {
+      throw new PromiseNotFoundException();
     }
+
+    return true;
   }
 
-  async deletePromise(promiseId: string, userEmail: string) {
-    const qr = this.datasource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
+  async deletePromise(
+    entityManager: EntityManager,
+    promiseId: string,
+    userEmail: string,
+  ) {
+    const result = await entityManager.delete(Promise, {
+      id: promiseId,
+      user: { email: userEmail },
+    });
 
-    try {
-      const result = await this.promiseRepository.delete({
-        id: promiseId,
-        user: { email: userEmail },
-      });
-
-      if (result.affected === 0) {
-        throw new PromiseNotFoundException();
-      }
-
-      await qr.commitTransaction();
-      return true;
-    } catch (error) {
-      await qr.rollbackTransaction();
-
-      if (error instanceof HttpException) throw error;
-
-      throw new ServerException();
-    } finally {
-      await qr.release();
+    if (result.affected === 0) {
+      throw new PromiseNotFoundException();
     }
+
+    return true;
   }
 
   async changePromiseState(

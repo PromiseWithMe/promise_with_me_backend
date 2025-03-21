@@ -23,17 +23,17 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async _gereateToken(email: string) {
+  async _generateToken(email: string) {
     return new TokensResponse(
       await this.jwtService.signAsync(
-        { email: email, isRefresh: false },
+        { email: email },
         {
           secret: this.configService.get(EnvKeys.JWT_SECRET),
           expiresIn: '10h',
         },
       ),
       await this.jwtService.signAsync(
-        { email: email, isRefresh: true },
+        { email: email },
         {
           secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH),
           expiresIn: '7d',
@@ -51,18 +51,14 @@ export class AuthService {
     });
     if (user) throw new UserAlreadyExistsException();
 
-    try {
-      await this.userRepository.save({
-        email,
-        password: await bcrypt.hash(password, 10),
-        nickname,
-        role: ROLE.USER,
-      });
-    } catch (error) {
-      throw error;
-    }
+    const newUser = this.userRepository.create({
+      email,
+      password: await bcrypt.hash(password, 10),
+      nickname,
+    });
+    await this.userRepository.save(newUser);
 
-    return this._gereateToken(email);
+    return this._generateToken(email);
   }
 
   async login(loginRequest: LoginRequest) {
@@ -78,10 +74,10 @@ export class AuthService {
       throw new LoginFailException();
     }
 
-    return this._gereateToken(email);
+    return this._generateToken(email);
   }
 
   async reIssue(userEmail: string) {
-    return this._gereateToken(userEmail);
+    return this._generateToken(userEmail);
   }
 }

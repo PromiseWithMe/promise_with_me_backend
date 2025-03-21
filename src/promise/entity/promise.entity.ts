@@ -10,7 +10,7 @@ export class Promise {
   @Column({ nullable: false })
   title: string;
 
-  @Column({ comment: 'Number Array를 String으로 저장', nullable: false })
+  @Column({ comment: 'Number Array를 String으로 저장', nullable: true })
   dayOfWeek: string;
 
   @Column({
