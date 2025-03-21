@@ -17,13 +17,13 @@ export class AuthController {
   }
 
   @Public()
-  @Get('login')
+  @Post('login')
   login(@Body() loginRequest: LoginRequest) {
     return this.authService.login(loginRequest);
   }
 
   @IsRefresh()
-  @Get('re-issue')
+  @Post('re-issue')
   reissue(@GetUserEmail() userEmail: string) {
     return this.authService.reIssue(userEmail);
   }
