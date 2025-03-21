@@ -19,6 +19,7 @@ import { ChangePromiseStateRequest } from './dto/request/change-promise-state.re
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { GetEntityManager } from 'src/common/decorator/get-query-runner';
 import { EntityManager } from 'typeorm';
+import { GetPromiseBodyRequest } from './dto/request/get-promise-body.request';
 
 @Controller('promise')
 export class PromiseController {
@@ -42,8 +43,13 @@ export class PromiseController {
   findAll(
     @GetUserEmail() userEmail: string,
     @Query() getPromsieRequest: GetPromsiesRequest,
+    @Body() getPromiseBodyRequest: GetPromiseBodyRequest
   ) {
-    return this.promiseService.getPromises(userEmail, getPromsieRequest);
+    return this.promiseService.getPromises(
+      userEmail,
+      getPromsieRequest,
+      getPromiseBodyRequest,
+    );
   }
 
   @Patch('/:id')
