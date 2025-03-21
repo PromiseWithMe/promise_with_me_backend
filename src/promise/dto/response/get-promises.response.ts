@@ -8,7 +8,9 @@ export class GetPromisesResponse {
     this.promises = promises.map((value) => {
       return {
         title: value.title,
-        dayOfWeek: value.dayOfWeek.split(',').map((value) => Number(value)),
+        dayOfWeek: value.dayOfWeek
+          ? value.dayOfWeek.split(',').map((value) => Number(value))
+          : null,
         promiseState: value.promiseState,
       };
     });
