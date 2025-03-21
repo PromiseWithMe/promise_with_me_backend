@@ -8,11 +8,11 @@ import { IsNotUUidException } from 'src/exception/custom-exception/is-not-uuid.e
 
 @Injectable()
 export class UUIDCheckPipe implements PipeTransform {
+  private readonly uuidPipe = new ParseUUIDPipe();
+
   async transform(value: any, metadata: ArgumentMetadata) {
-    const uuidPipe = new ParseUUIDPipe();
     try {
-      await uuidPipe.transform(value, metadata);;
-      return value;
+      return await this.uuidPipe.transform(value, metadata);
     } catch (error) {
       throw new IsNotUUidException();
     }
