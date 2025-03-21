@@ -8,11 +8,11 @@ import { UserNotFoundException } from 'src/exception/custom-exception/user-not-f
 import { ServerException } from 'src/exception/custom-exception/server.exception';
 import { GetPromsiesRequest } from './dto/request/get-promises.request';
 import { UpdatePromiseRequest } from './dto/request/update-promise.request';
-import { HttpException } from 'src/exception/http.exception';
 import { PromiseNotFoundException } from 'src/exception/custom-exception/promise-not-found.exception';
 import { PromiseState } from 'src/common/enum/promise-state';
 import { ChangePromiseStateRequest } from './dto/request/change-promise-state.request';
 import { GetPromisesResponse } from './dto/response/get-promises.response';
+import { GetPromiseBodyRequest } from './dto/request/get-promise-body.request';
 
 @Injectable()
 export class PromiseService {
@@ -46,18 +46,31 @@ export class PromiseService {
     return true;
   }
 
-  async getPromises(userEmail: string, getPromsiesRequest: GetPromsiesRequest) {
+  async getPromises(
+    userEmail: string,
+    getPromsiesRequest: GetPromsiesRequest,
+    getPromiseBodyRequest: GetPromiseBodyRequest,
+  ) {
     try {
       const takeNumber = 10;
       const { page = 0 } = getPromsiesRequest;
+      const { dayOfWeek } = getPromiseBodyRequest;
 
-      return new GetPromisesResponse(
-        await this.promiseRepository.find({
-          where: { user: { email: userEmail } },
-          skip: page * takeNumber,
-          take: takeNumber,
-        }),
-      );
+      const query = this.promiseRepository
+        .createQueryBuilder('p')
+        .skip(page * takeNumber)
+        .take(takeNumber)
+        .where('p.userEmail = :userEmail', { userEmail });
+
+      if(dayOfWeek) {
+        dayOfWeek.forEach((day, index) => {
+          query.andWhere(`FIND_IN_SET(:day, p.dayOfWeek)`, {
+            day,
+          });
+        });
+      }
+
+      return new GetPromisesResponse(await query.getMany());
     } catch (error) {
       throw new ServerException();
     }
