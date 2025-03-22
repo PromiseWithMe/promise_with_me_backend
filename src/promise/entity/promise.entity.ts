@@ -1,6 +1,6 @@
 import { PromiseState } from 'src/common/enum/promise-state';
 import { User } from 'src/user/entity/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { AfterLoad, Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('promise')
 export class Promise {
@@ -22,4 +22,7 @@ export class Promise {
 
   @ManyToOne(() => User, (user) => user.promises)
   user: User;
+
+  @CreateDateColumn({ type: "timestamp" })
+  createdAt: Date;
 }
