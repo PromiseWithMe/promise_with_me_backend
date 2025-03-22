@@ -12,6 +12,7 @@ export class GetPromisesResponse {
           ? value.dayOfWeek.split(',').map((value) => Number(value))
           : null,
         promiseState: value.promiseState,
+        createdAt: value.createdAt,
       };
     });
   }
