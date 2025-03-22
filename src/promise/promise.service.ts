@@ -62,7 +62,7 @@ export class PromiseService {
         .take(takeNumber)
         .where('p.userEmail = :userEmail', { userEmail });
 
-      if(dayOfWeek) {
+      if (dayOfWeek) {
         dayOfWeek.forEach((day, index) => {
           query.andWhere(`FIND_IN_SET(:day, p.dayOfWeek)`, {
             day,
@@ -70,7 +70,11 @@ export class PromiseService {
         });
       }
 
-      return new GetPromisesResponse(await query.getMany());
+      query.orderBy('p.createdAt', 'DESC')
+
+      return new GetPromisesResponse(
+        await query.getMany()
+      );
     } catch (error) {
       throw new ServerException();
     }
