@@ -4,4 +4,5 @@ export interface Promise {
   title: string;
   dayOfWeek: number[];
   promiseState: PromiseState;
+  createdAt: Date;
 }
