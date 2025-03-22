@@ -11,6 +11,7 @@ import { EnvKeys } from './common/enum/env-keys';
 import { PromiseModule } from './promise/promise.module';
 import { User } from './user/entity/user.entity';
 import { Promise } from './promise/entity/promise.entity';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { Promise } from './promise/entity/promise.entity';
     AuthModule,
     UserModule,
     PromiseModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [
