@@ -13,6 +13,7 @@ import { User } from './user/entity/user.entity';
 import { Promise } from './promise/entity/promise.entity';
 import { ChatModule } from './chat/chat.module';
 import { Chat } from './chat/entity/chat.entity';
+import { DiaryModule } from './diary/diary.module';
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import { Chat } from './chat/entity/chat.entity';
         JWT_SECRET: Joi.string().required(),
         JWT_SECRET_REFRESH: Joi.string().required(),
         CHAT_GPT_KEY: Joi.string().required(),
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -48,6 +51,7 @@ import { Chat } from './chat/entity/chat.entity';
     UserModule,
     PromiseModule,
     ChatModule,
+    DiaryModule,
   ],
   controllers: [],
   providers: [
