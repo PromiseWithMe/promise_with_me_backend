@@ -12,6 +12,7 @@ import { PromiseModule } from './promise/promise.module';
 import { User } from './user/entity/user.entity';
 import { Promise } from './promise/entity/promise.entity';
 import { ChatModule } from './chat/chat.module';
+import { Chat } from './chat/entity/chat.entity';
 
 @Module({
   imports: [
@@ -38,7 +39,7 @@ import { ChatModule } from './chat/chat.module';
         username: configService.get(EnvKeys.DB_USERNAME),
         password: configService.get(EnvKeys.DB_PASSWORD),
         database: configService.get(EnvKeys.DB_DATABASE),
-        entities: [User, Promise],
+        entities: [User, Promise, Chat],
         synchronize: true,
       }),
     }),
