@@ -26,6 +26,7 @@ import { ChatModule } from './chat/chat.module';
         DB_DATABASE: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_SECRET_REFRESH: Joi.string().required(),
+        CHAT_GPT_KEY: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
