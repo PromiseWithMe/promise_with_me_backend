@@ -1,6 +1,7 @@
+import { Chat } from 'src/chat/entity/chat.entity';
 import { PromiseState } from 'src/common/enum/promise-state';
 import { User } from 'src/user/entity/user.entity';
-import { AfterLoad, Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('promise')
 export class Promise {
@@ -22,6 +23,9 @@ export class Promise {
 
   @ManyToOne(() => User, (user) => user.promises)
   user: User;
+
+  @OneToMany(() => Chat, (chat) => chat.promise)
+  chates: Chat;
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
