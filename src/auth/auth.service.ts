@@ -6,12 +6,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entity/user.entity';
 import { Repository } from 'typeorm';
 import { UserAlreadyExistsException } from 'src/exception/custom-exception/user-already-exists.exception.ts';
-import { ROLE } from 'src/common/enum/role';
 import * as bcrypt from 'bcrypt';
 import { TokensResponse } from './dto/response/tokens.response';
 import { EnvKeys } from 'src/common/enum/env-keys';
 import { LoginRequest } from './dto/request/login.reqeust';
 import { LoginFailException } from 'src/exception/custom-exception/login-fail.exception';
+import { generateToday } from 'src/common/util/generate-today';
 
 @Injectable()
 export class AuthService {
@@ -55,6 +55,7 @@ export class AuthService {
       email,
       password: await bcrypt.hash(password, 10),
       nickname,
+      createdAt: generateToday(),
     });
     await this.userRepository.save(newUser);
 

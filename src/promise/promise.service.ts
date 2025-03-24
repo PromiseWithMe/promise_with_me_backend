@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promise } from './entity/promise.entity';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreatePromiseRequest } from './dto/request/create-promise.request';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/custom-exception/user-not-found.exception';
@@ -13,16 +13,13 @@ import { PromiseState } from 'src/common/enum/promise-state';
 import { ChangePromiseStateRequest } from './dto/request/change-promise-state.request';
 import { GetPromisesResponse } from './dto/response/get-promises.response';
 import { GetPromiseBodyRequest } from './dto/request/get-promise-body.request';
+import { generateToday } from 'src/common/util/generate-today';
 
 @Injectable()
 export class PromiseService {
   constructor(
     @InjectRepository(Promise)
     private readonly promiseRepository: Repository<Promise>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-
-    private readonly datasource: DataSource,
   ) {}
 
   async createPromise(
@@ -41,6 +38,7 @@ export class PromiseService {
       title,
       dayOfWeek: dayOfWeek.length === 0 ? null : dayOfWeek.toString(),
       user,
+      createdAt: generateToday(),
     });
 
     return true;
@@ -70,11 +68,9 @@ export class PromiseService {
         });
       }
 
-      query.orderBy('p.createdAt', 'DESC')
+      query.orderBy('p.createdAt', 'DESC');
 
-      return new GetPromisesResponse(
-        await query.getMany()
-      );
+      return new GetPromisesResponse(await query.getMany());
     } catch (error) {
       throw new ServerException();
     }

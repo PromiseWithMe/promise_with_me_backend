@@ -2,7 +2,6 @@ import { ROLE } from 'src/common/enum/role';
 import { Promise } from 'src/promise/entity/promise.entity';
 import {
   Column,
-  CreateDateColumn,
   Entity,
   Index,
   ManyToOne,
@@ -31,6 +30,6 @@ export class Chat {
   })
   content: string;
 
-  @CreateDateColumn()
+  @Column({ nullable: false })
   createdAt: Date;
 }
