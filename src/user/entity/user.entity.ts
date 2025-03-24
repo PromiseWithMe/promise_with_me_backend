@@ -1,3 +1,4 @@
+import { Calender } from 'src/calender/entity/calender.entity';
 import { ROLE } from 'src/common/enum/role';
 import { Promise } from 'src/promise/entity/promise.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from 'typeorm';
@@ -44,4 +45,7 @@ export class User {
 
   @OneToMany(() => Promise, (promise) => promise.user)
   promises: Promise[]
+
+  @OneToMany(() => Calender, (calender) => calender.user)
+  calenders: Calender[]
 }
