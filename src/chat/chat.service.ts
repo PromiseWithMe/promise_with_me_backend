@@ -12,6 +12,7 @@ import { WellPromiseRequest } from './dto/request/well-promise.request';
 import { Promise } from 'src/promise/entity/promise.entity';
 import { PromiseNotFoundException } from 'src/exception/ws-custom-exception/promise-not-found.exception';
 import { SaveChatErrorException } from 'src/exception/ws-custom-exception/save-chat-error.exception';
+import { generateToday } from 'src/common/util/generate-today';
 
 @Injectable()
 export class ChatService {
@@ -81,11 +82,13 @@ export class ChatService {
         promise,
         content: '약속을 더 쉽게 지키는 법',
         role: ROLE.USER,
+        createdAt: generateToday(),
       });
       await this.chatRepository.save({
         promise,
         content: fullResponse,
         role: ROLE.SYSTEM,
+        createdAt: generateToday(),
       });
     } catch (error) {
       throw new SaveChatErrorException();

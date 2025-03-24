@@ -40,7 +40,9 @@ export class User {
   })
   withdrawDate: Date;
 
-  @CreateDateColumn()
+  @Column({
+    nullable: false
+  })
   createdAt: Date;
 
   @OneToMany(() => Promise, (promise) => promise.user)
