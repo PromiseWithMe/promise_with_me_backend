@@ -15,10 +15,6 @@ export class CalenderService {
   constructor(
     @InjectRepository(PromiseEntity)
     private readonly promiseRepository: Repository<PromiseEntity>,
-    @InjectRepository(SuccessPromise)
-    private readonly successPromiseRepository: Repository<SuccessPromise>,
-    @InjectRepository(Calender)
-    private readonly calenderRepository: Repository<Calender>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
@@ -54,8 +50,8 @@ export class CalenderService {
         user,
       });
 
-      const completedPromises = await qr
-        .createQueryBuilder(PromiseEntity, 'p')
+      const completedPromises = await this.promiseRepository
+        .createQueryBuilder('p')
         .select('p.title', 'title')
         .where('p.userEmail = :userEmail', { userEmail })
         .andWhere('p.promiseState = :state', {
@@ -68,7 +64,7 @@ export class CalenderService {
 
       await Promise.all(
         completedPromises.map(({ title }) => {
-          this.successPromiseRepository.save({
+          qr.save(SuccessPromise, {
             title,
             calender,
           });
