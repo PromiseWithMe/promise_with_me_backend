@@ -18,7 +18,7 @@ export class Promise {
   @Column({ nullable: false })
   title: string;
 
-  @Column({ type: 'set', enum: dayOfWeeks, nullable: false })
+  @Column({ type: 'set', enum: dayOfWeeks, nullable: true })
   dayOfWeek: string;
 
   @Column({
