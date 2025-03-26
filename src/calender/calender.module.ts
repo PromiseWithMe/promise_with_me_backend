@@ -8,11 +8,12 @@ import { User } from 'src/user/entity/user.entity';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
 import { EnvKeys } from 'src/common/enum/env-keys';
+import { Calender } from './entity/calender.entity';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    TypeOrmModule.forFeature([Promise, User]),
+    TypeOrmModule.forFeature([Promise, User, Calender]),
     RedisModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
