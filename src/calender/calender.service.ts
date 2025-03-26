@@ -9,6 +9,8 @@ import { generateToday } from 'src/common/util/generate-today';
 import { User } from 'src/user/entity/user.entity';
 import { dayOfWeeks } from 'src/common/set/day-of-weeks';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 @Injectable()
 export class CalenderService {
@@ -17,6 +19,8 @@ export class CalenderService {
     private readonly promiseRepository: Repository<PromiseEntity>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRedis()
+    private readonly redisClient: Redis,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -45,7 +49,7 @@ export class CalenderService {
       if (!user) continue;
 
       const calender = await qr.save(Calender, {
-        diary: null,
+        diary: await this.redisClient.get(user.email),
         date: generateToday(),
         user,
       });
