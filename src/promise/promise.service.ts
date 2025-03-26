@@ -89,7 +89,7 @@ export class PromiseService {
       { id: promiseId, user: { email: userEmail } },
       {
         title,
-        dayOfWeek: dayOfWeek.join(','),
+        dayOfWeek: dayOfWeek ? dayOfWeek.join(',') : null,
       },
     );
 
