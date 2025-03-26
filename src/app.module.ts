@@ -16,6 +16,7 @@ import { Chat } from './chat/entity/chat.entity';
 import { DiaryModule } from './diary/diary.module';
 import { CalenderModule } from './calender/calender.module';
 import { Calender } from './calender/entity/calender.entity';
+import { SuccessPromise } from './calender/entity/success-promise.entity';
 
 @Module({
   imports: [
@@ -44,7 +45,7 @@ import { Calender } from './calender/entity/calender.entity';
         username: configService.get(EnvKeys.DB_USERNAME),
         password: configService.get(EnvKeys.DB_PASSWORD),
         database: configService.get(EnvKeys.DB_DATABASE),
-        entities: [User, Promise, Chat, Calender],
+        entities: [User, Promise, Chat, Calender, SuccessPromise],
         synchronize: true,
       }),
     }),
