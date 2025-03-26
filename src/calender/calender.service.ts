@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promise as PromiseEntity } from 'src/promise/entity/promise.entity';
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { SuccessPromise } from './entity/success-promise.entity';
 import { Calender } from './entity/calender.entity';
 import { PromiseState } from 'src/common/enum/promise-state';
@@ -24,7 +24,7 @@ export class CalenderService {
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async saveCalender() {
+  async saveCalender(qr: EntityManager) {
     const completePromisesUsers = await this.promiseRepository
       .createQueryBuilder('p')
       .select('DISTINCT p.userEmail', 'userEmail')
@@ -48,14 +48,14 @@ export class CalenderService {
       const user = userMap.get(userEmail);
       if (!user) continue;
 
-      const calender = await this.calenderRepository.save({
+      const calender = await qr.save(Calender, {
         diary: null,
         date: generateToday(),
         user,
       });
 
-      const completedPromises = await this.promiseRepository
-        .createQueryBuilder('p')
+      const completedPromises = await qr
+        .createQueryBuilder(PromiseEntity, 'p')
         .select('p.title', 'title')
         .where('p.userEmail = :userEmail', { userEmail })
         .andWhere('p.promiseState = :state', {
@@ -66,12 +66,14 @@ export class CalenderService {
         })
         .getRawMany();
 
-      await Promise.all(completedPromises.map(({ title }) => {
-        this.successPromiseRepository.save({
-          title,
-          calender,
-        });
-      }));
+      await Promise.all(
+        completedPromises.map(({ title }) => {
+          this.successPromiseRepository.save({
+            title,
+            calender,
+          });
+        }),
+      );
     }
   }
 }
