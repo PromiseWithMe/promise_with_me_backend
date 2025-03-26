@@ -64,6 +64,7 @@ export class CalenderService {
         .andWhere('find_in_set(:day, p.dayOfWeek)', {
           day: dayOfWeeks[new Date(generateToday()).getDay()],
         })
+        .orWhere('p.dayOfWeek is null')
         .getRawMany();
 
       await Promise.all(
