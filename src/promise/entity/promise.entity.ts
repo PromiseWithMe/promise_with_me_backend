@@ -1,4 +1,5 @@
 import { Chat } from 'src/chat/entity/chat.entity';
+import { dayOfWeeks } from 'src/common/set/day-of-weeks';
 import { PromiseState } from 'src/common/enum/promise-state';
 import { User } from 'src/user/entity/user.entity';
 import {
@@ -17,7 +18,7 @@ export class Promise {
   @Column({ nullable: false })
   title: string;
 
-  @Column({ comment: 'Number Array를 String으로 저장', nullable: true })
+  @Column({ type: 'set', enum: dayOfWeeks, nullable: false })
   dayOfWeek: string;
 
   @Column({
