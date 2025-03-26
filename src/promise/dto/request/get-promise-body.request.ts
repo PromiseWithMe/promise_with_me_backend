@@ -1,9 +1,10 @@
-import { IsNotEmpty, IsOptional, Max, Min } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, Max, Min } from 'class-validator';
+import { dayOfWeeks } from 'src/common/set/day-of-weeks';
 
 export class GetPromiseBodyRequest {
   @IsNotEmpty()
   @IsOptional()
-  @Min(0, { each: true, message: '0~6 내외의 숫자만을 리스트에 넣어주세요' })
-  @Max(6, { each: true, message: '0~6 내외의 숫자만을 리스트에 넣어주세요' })
-  dayOfWeek?: number[];
+  @IsNotEmpty({ message: '날짜 형식을 지정해주세요' })
+  @IsIn(dayOfWeeks, { each: true })
+  dayOfWeek?: string[];
 }

@@ -36,7 +36,7 @@ export class PromiseService {
 
     await entityManager.save(Promise, {
       title,
-      dayOfWeek: dayOfWeek.length === 0 ? null : dayOfWeek.toString(),
+      dayOfWeek: dayOfWeek.join(','),
       user,
       createdAt: generateToday(),
     });
@@ -62,7 +62,7 @@ export class PromiseService {
 
       if (dayOfWeek) {
         dayOfWeek.forEach((day, index) => {
-          query.andWhere(`FIND_IN_SET(:day, p.dayOfWeek)`, {
+          query.andWhere(`find_in_set(:day, p.dayOfWeek)`, {
             day,
           });
         });
@@ -89,7 +89,7 @@ export class PromiseService {
       { id: promiseId, user: { email: userEmail } },
       {
         title,
-        dayOfWeek: dayOfWeek ? dayOfWeek.toString() : undefined,
+        dayOfWeek: dayOfWeek.join(','),
       },
     );
 
