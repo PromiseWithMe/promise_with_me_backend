@@ -13,6 +13,8 @@ import { Promise } from 'src/promise/entity/promise.entity';
 import { PromiseNotFoundException } from 'src/exception/ws-custom-exception/promise-not-found.exception';
 import { SaveChatErrorException } from 'src/exception/ws-custom-exception/save-chat-error.exception';
 import { generateToday } from 'src/common/util/generate-today';
+import { User } from 'src/user/entity/user.entity';
+import { FindChatsReponse } from './dto/response/find-chats.response';
 
 @Injectable()
 export class ChatService {
@@ -23,6 +25,8 @@ export class ChatService {
     private readonly promiseRepository: Repository<Promise>,
     @InjectRepository(Chat)
     private readonly chatRepository: Repository<Chat>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
 
     private configService: ConfigService,
   ) {
@@ -59,7 +63,10 @@ export class ChatService {
           {
             role: 'system',
             content: `너는 내가 나와의 약속을 지키도록 돕는 AI야.\n
-            "${message}" 약속을 지키는 방법을 알려줘\n`,
+            "${message}" 약속을 지키는 방법을 알려줘\n
+            답변 형식 : "1.소제목 : 내용"\n
+            대답에 스타일을 적용하지 말아줘\n
+            `,
           },
         ],
       });
@@ -93,5 +100,18 @@ export class ChatService {
     } catch (error) {
       throw new SaveChatErrorException();
     }
+  }
+
+  async find(userEmail: string, promiseId: string) {
+    const promise = await this.promiseRepository.findOne({
+      where: { id: promiseId, user: { email: userEmail } },
+    });
+    if (!promise) throw new PromiseNotFoundException();
+
+    return new FindChatsReponse(
+      await this.chatRepository.find({
+        where: { promise: { id: promiseId } },
+      }),
+    );
   }
 }
