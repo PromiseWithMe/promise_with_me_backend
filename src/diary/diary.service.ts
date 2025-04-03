@@ -10,8 +10,8 @@ export class DiaryService {
     private readonly redisClient: Redis,
   ) {}
 
-  async getDiary(userEmail: string, client: Socket) {
-    client.emit('diary', await this.redisClient.get(userEmail));
+  async getDiary(userEmail: string) {
+    return await this.redisClient.get(userEmail);
   }
 
   async setDiary(userEmail: string, data: string) {
