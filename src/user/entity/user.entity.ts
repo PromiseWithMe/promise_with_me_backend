@@ -1,7 +1,7 @@
-import { Calender } from 'src/calender/entity/calender.entity';
+import { Calendar } from 'src/calendar/entity/calendar.entity';
 import { ROLE } from 'src/common/enum/role';
 import { Promise } from 'src/promise/entity/promise.entity';
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity('user')
 export class User {
@@ -48,6 +48,6 @@ export class User {
   @OneToMany(() => Promise, (promise) => promise.user)
   promises: Promise[]
 
-  @OneToMany(() => Calender, (calender) => calender.user)
-  calenders: Calender[]
+  @OneToMany(() => Calendar, (calendar) => calendar.user)
+  calendars: Calendar[]
 }

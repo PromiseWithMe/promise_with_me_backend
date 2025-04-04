@@ -14,9 +14,9 @@ import { Promise } from './promise/entity/promise.entity';
 import { ChatModule } from './chat/chat.module';
 import { Chat } from './chat/entity/chat.entity';
 import { DiaryModule } from './diary/diary.module';
-import { CalenderModule } from './calender/calender.module';
-import { Calender } from './calender/entity/calender.entity';
-import { SuccessPromise } from './calender/entity/success-promise.entity';
+import { CalendarModule } from './calendar/calendar.module';
+import { Calendar } from './calendar/entity/calendar.entity';
+import { SuccessPromise } from './calendar/entity/success-promise.entity';
 import { RedisModule } from '@nestjs-modules/ioredis';
 
 @Module({
@@ -46,7 +46,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
         username: configService.get(EnvKeys.DB_USERNAME),
         password: configService.get(EnvKeys.DB_PASSWORD),
         database: configService.get(EnvKeys.DB_DATABASE),
-        entities: [User, Promise, Chat, Calender, SuccessPromise],
+        entities: [User, Promise, Chat, Calendar, SuccessPromise],
         synchronize: true,
       }),
     }),
@@ -66,7 +66,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
     PromiseModule,
     ChatModule,
     DiaryModule,
-    CalenderModule,
+    CalendarModule,
   ],
   controllers: [],
   providers: [

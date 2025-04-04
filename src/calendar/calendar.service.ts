@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Promise as PromiseEntity } from 'src/promise/entity/promise.entity';
 import { EntityManager, In, Repository } from 'typeorm';
 import { SuccessPromise } from './entity/success-promise.entity';
-import { Calender } from './entity/calender.entity';
+import { Calendar } from './entity/calendar.entity';
 import { PromiseState } from 'src/common/enum/promise-state';
 import { generateToday } from 'src/common/util/generate-today';
 import { User } from 'src/user/entity/user.entity';
@@ -11,35 +11,35 @@ import { dayOfWeeks } from 'src/common/set/day-of-weeks';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
-import { GetCalenderRequest } from './dto/request/get-calender.request';
+import { GetCalendarRequest } from './dto/request/get-calendar.request';
 import { ServerException } from 'src/exception/custom-exception/server.exception';
 
 @Injectable()
-export class CalenderService {
+export class CalendarService {
   constructor(
     @InjectRepository(PromiseEntity)
     private readonly promiseRepository: Repository<PromiseEntity>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(Calender)
-    private readonly calenderRepository: Repository<Calender>,
+    @InjectRepository(Calendar)
+    private readonly calendarRepository: Repository<Calendar>,
     @InjectRedis()
     private readonly redisClient: Redis,
   ) {}
 
-  async getCalender(userEmail: string, getCalenderRequest: GetCalenderRequest) {
-    const { year, month } = getCalenderRequest;
+  async getCalendar(userEmail: string, getCalendarRequest: GetCalendarRequest) {
+    const { year, month } = getCalendarRequest;
 
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 1);
 
     try {
-      return await this.calenderRepository
-        .createQueryBuilder('calender')
-        .leftJoinAndSelect('calender.successPromises', 'successPromise')
-        .where('calender.userEmail = :userEmail', { userEmail })
-        .andWhere('calender.date >= :startDate', { startDate })
-        .andWhere('calender.date < :endDate', { endDate })
+      return await this.calendarRepository
+        .createQueryBuilder('calendar')
+        .leftJoinAndSelect('calendar.successPromises', 'successPromise')
+        .where('calendar.userEmail = :userEmail', { userEmail })
+        .andWhere('calendar.date >= :startDate', { startDate })
+        .andWhere('calendar.date < :endDate', { endDate })
         .getMany();
     } catch (error) {
       throw new ServerException();
@@ -47,7 +47,7 @@ export class CalenderService {
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async saveCalender(qr: EntityManager) {
+  async saveCalendar(qr: EntityManager) {
     const completePromisesUsers = await this.promiseRepository
       .createQueryBuilder('p')
       .select('DISTINCT p.userEmail', 'userEmail')
@@ -71,7 +71,7 @@ export class CalenderService {
       const user = userMap.get(userEmail);
       if (!user) continue;
 
-      const calender = await qr.save(Calender, {
+      const calendar = await qr.save(Calendar, {
         diary: await this.redisClient.get(`${user.email}_diary`),
         date: new Date(generateToday()),
         user,
@@ -94,7 +94,7 @@ export class CalenderService {
         completedPromises.map(({ title }) => {
           qr.save(SuccessPromise, {
             title,
-            calender,
+            calendar,
           });
         }),
       );

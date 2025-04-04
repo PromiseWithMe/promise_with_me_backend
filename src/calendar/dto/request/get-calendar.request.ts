@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, Max, Min } from 'class-validator';
 
-export class GetCalenderRequest {
+export class GetCalendarRequest {
   @IsNotEmpty()
   @IsNumber()
   year: number;
