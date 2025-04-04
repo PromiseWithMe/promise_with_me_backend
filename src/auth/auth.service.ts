@@ -39,7 +39,7 @@ export class AuthService {
       expiresIn: '7d',
     });
 
-    this.redisClient.set(`${email}_refresh`, refreshToken)
+    this.redisClient.set(`${email}_refresh`, refreshToken, 'EX', 60 * 60 * 24 * 7);
 
     return new TokensResponse(accessToken, refreshToken);
   }
