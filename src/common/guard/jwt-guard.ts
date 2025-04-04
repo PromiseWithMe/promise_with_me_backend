@@ -37,8 +37,18 @@ export class JwtGuard implements CanActivate {
       if (bearer.toLowerCase() !== 'bearer')
         throw new InvalidTokenFormatException();
 
+      const secretKey = this.reflector.get(IsRefresh, context.getHandler())
+        ? this.configService.get(EnvKeys.JWT_SECRET_REFRESH)
+        : this.configService.get(EnvKeys.JWT_SECRET);
+
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: secretKey,
+      });
+
+      payload.data = Buffer.from(payload.data, 'base64').toString('utf-8');
+
       const user = await this.userRepository.findOne({
-        where: { email: this.jwtService.decode(token).email },
+        where: { email: payload.data },
         select: ['email', 'role'],
       });
       if (!user) throw new InvalidTokenFormatException();
@@ -48,13 +58,7 @@ export class JwtGuard implements CanActivate {
         throw new InvalidTokenFormatException();
       }
 
-      const secretKey = this.reflector.get(IsRefresh, context.getHandler())
-        ? this.configService.get(EnvKeys.JWT_SECRET_REFRESH)
-        : this.configService.get(EnvKeys.JWT_SECRET);
-
-      req.user = await this.jwtService.verifyAsync(token, {
-        secret: secretKey,
-      });
+      req.user = { email: user.email, role: user.role };
     } catch (err) {
       throw new InvalidTokenFormatException();
     }

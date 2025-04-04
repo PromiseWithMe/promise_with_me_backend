@@ -24,16 +24,18 @@ export class AuthService {
   ) {}
 
   async _generateToken(email: string) {
+    const payload = { data: Buffer.from(email, 'utf-8').toString('base64') };
+
     return new TokensResponse(
       await this.jwtService.signAsync(
-        { email: email },
+        payload,
         {
           secret: this.configService.get(EnvKeys.JWT_SECRET),
           expiresIn: '10h',
         },
       ),
       await this.jwtService.signAsync(
-        { email: email },
+        payload,
         {
           secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH),
           expiresIn: '7d',
