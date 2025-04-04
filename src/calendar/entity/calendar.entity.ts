@@ -8,8 +8,8 @@ import {
 } from 'typeorm';
 import { SuccessPromise } from './success-promise.entity';
 
-@Entity('calender')
-export class Calender {
+@Entity('calendar')
+export class Calendar {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -24,9 +24,9 @@ export class Calender {
   })
   diary: string;
 
-  @ManyToOne(() => User, (user) => user.calenders)
+  @ManyToOne(() => User, (user) => user.calendars)
   user: User;
 
-  @OneToMany(() => SuccessPromise, (successPromise) => successPromise.calender)
+  @OneToMany(() => SuccessPromise, (successPromise) => successPromise.calendar)
   successPromises: SuccessPromise[];
 }
