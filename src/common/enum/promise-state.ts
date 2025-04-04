@@ -1,5 +1,5 @@
 export enum PromiseState {
-  NotCompleted,
-  Completed,
-  Skip,
+  NotCompleted = 'NotCompleted',
+  Completed = 'Completed',
+  Skip = 'Skip',
 }

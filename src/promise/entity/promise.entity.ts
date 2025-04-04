@@ -4,6 +4,7 @@ import { PromiseState } from 'src/common/enum/promise-state';
 import { User } from 'src/user/entity/user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
@@ -34,6 +35,6 @@ export class Promise {
   @OneToMany(() => Chat, (chat) => chat.promise)
   chates: Chat;
 
-  @Column({ nullable: false })
+  @CreateDateColumn()
   createdAt: Date;
 }

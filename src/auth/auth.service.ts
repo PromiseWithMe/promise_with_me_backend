@@ -12,34 +12,36 @@ import { EnvKeys } from 'src/common/enum/env-keys';
 import { LoginRequest } from './dto/request/login.reqeust';
 import { LoginFailException } from 'src/exception/custom-exception/login-fail.exception';
 import { generateToday } from 'src/common/util/generate-today';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRedis()
+    private readonly redisClient: Redis,
 
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
   async _generateToken(email: string) {
-    return new TokensResponse(
-      await this.jwtService.signAsync(
-        { email: email },
-        {
-          secret: this.configService.get(EnvKeys.JWT_SECRET),
-          expiresIn: '10h',
-        },
-      ),
-      await this.jwtService.signAsync(
-        { email: email },
-        {
-          secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH),
-          expiresIn: '7d',
-        },
-      ),
-    );
+    const payload = { data: Buffer.from(email, 'utf-8').toString('base64') };
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get(EnvKeys.JWT_SECRET),
+      expiresIn: '10h',
+    });
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get(EnvKeys.JWT_SECRET_REFRESH),
+      expiresIn: '7d',
+    });
+
+    this.redisClient.set(`${email}_refresh`, refreshToken, 'EX', 60 * 60 * 24 * 7);
+
+    return new TokensResponse(accessToken, refreshToken);
   }
 
   async register(registerRequest: RegisterRequest) {

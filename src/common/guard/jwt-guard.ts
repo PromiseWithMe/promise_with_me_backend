@@ -11,11 +11,15 @@ import { Public } from '../decorator/public';
 import { ROLE } from '../enum/role';
 import { RBAC } from '../decorator/rbac';
 import { IsRefresh } from '../decorator/is-refresh';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 export class JwtGuard implements CanActivate {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRedis()
+    private readonly redisClient: Redis,
 
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -24,6 +28,8 @@ export class JwtGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
+
+    const isRefresh = this.reflector.get(IsRefresh, context.getHandler());
 
     if (this.reflector.get(Public, context.getHandler())) {
       return true;
@@ -37,8 +43,18 @@ export class JwtGuard implements CanActivate {
       if (bearer.toLowerCase() !== 'bearer')
         throw new InvalidTokenFormatException();
 
+      const secretKey = isRefresh
+        ? this.configService.get(EnvKeys.JWT_SECRET_REFRESH)
+        : this.configService.get(EnvKeys.JWT_SECRET);
+
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: secretKey,
+      });
+
+      payload.data = Buffer.from(payload.data, 'base64').toString('utf-8');
+
       const user = await this.userRepository.findOne({
-        where: { email: this.jwtService.decode(token).email },
+        where: { email: payload.data },
         select: ['email', 'role'],
       });
       if (!user) throw new InvalidTokenFormatException();
@@ -48,13 +64,14 @@ export class JwtGuard implements CanActivate {
         throw new InvalidTokenFormatException();
       }
 
-      const secretKey = this.reflector.get(IsRefresh, context.getHandler())
-        ? this.configService.get(EnvKeys.JWT_SECRET_REFRESH)
-        : this.configService.get(EnvKeys.JWT_SECRET);
+      if (
+        isRefresh &&
+        token !== (await this.redisClient.get(`${user.email}_refresh`))
+      ) {
+        throw new InvalidTokenFormatException();
+      }
 
-      req.user = await this.jwtService.verifyAsync(token, {
-        secret: secretKey,
-      });
+      req.user = { email: user.email, role: user.role };
     } catch (err) {
       throw new InvalidTokenFormatException();
     }

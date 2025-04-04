@@ -38,7 +38,6 @@ export class PromiseService {
       title,
       dayOfWeek: dayOfWeek.join(','),
       user,
-      createdAt: generateToday(),
     });
 
     return true;

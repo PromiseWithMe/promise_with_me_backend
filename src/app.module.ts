@@ -17,6 +17,7 @@ import { DiaryModule } from './diary/diary.module';
 import { CalenderModule } from './calender/calender.module';
 import { Calender } from './calender/entity/calender.entity';
 import { SuccessPromise } from './calender/entity/success-promise.entity';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 @Module({
   imports: [
@@ -47,6 +48,16 @@ import { SuccessPromise } from './calender/entity/success-promise.entity';
         database: configService.get(EnvKeys.DB_DATABASE),
         entities: [User, Promise, Chat, Calender, SuccessPromise],
         synchronize: true,
+      }),
+    }),
+    RedisModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'single',
+        options: {
+          host: config.get(EnvKeys.REDIS_HOST),
+          port: config.get(EnvKeys.REDIS_PORT),
+        },
       }),
     }),
     JwtModule.register({ global: true }),

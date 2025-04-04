@@ -1,7 +1,6 @@
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
-import { Socket } from 'socket.io';
 
 @Injectable()
 export class DiaryService {
@@ -10,11 +9,11 @@ export class DiaryService {
     private readonly redisClient: Redis,
   ) {}
 
-  async getDiary(userEmail: string, client: Socket) {
-    client.emit('diary', await this.redisClient.get(userEmail));
+  async getDiary(userEmail: string) {
+    return await this.redisClient.get(`${userEmail}_diary`);
   }
 
   async setDiary(userEmail: string, data: string) {
-    await this.redisClient.set(userEmail, data);
+    await this.redisClient.set(`${userEmail}_diary`, data);
   }
 }
