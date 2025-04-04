@@ -72,7 +72,7 @@ export class CalenderService {
       if (!user) continue;
 
       const calender = await qr.save(Calender, {
-        diary: await this.redisClient.get(user.email),
+        diary: await this.redisClient.get(`${user.email}_diary`),
         date: new Date(generateToday()),
         user,
       });
