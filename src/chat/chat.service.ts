@@ -53,13 +53,6 @@ export class ChatService {
         model: 'gpt-4o-mini',
         stream: true,
         messages: [
-          //   {
-          //     role: 'system',
-          //     content: `너는 내가 나와의 약속을 지키도록 돕는 AI야.\n
-          //     "${data}" 약속을 지키는 방법을 JSON 형식으로 알려줘\n
-          //     JSON 외의 출력은 허용하지 않아\n
-          //     JSON 형식: {"helpList":[{"description":"설명"}]}`,
-          //   },
           {
             role: 'system',
             content: `너는 내가 나와의 약속을 지키도록 돕는 AI야.\n
