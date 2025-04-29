@@ -7,7 +7,6 @@ import {
   Patch,
   Post,
   Query,
-  UseInterceptors,
 } from '@nestjs/common';
 import { PromiseService } from './promise.service';
 import { CreatePromiseRequest } from './dto/request/create-promise.request';
@@ -16,9 +15,6 @@ import { GetPromsiesRequest } from './dto/request/get-promises.request';
 import { UpdatePromiseRequest } from './dto/request/update-promise.request';
 import { UUIDCheckPipe } from 'src/common/pipe/uuid-check.pipe';
 import { ChangePromiseStateRequest } from './dto/request/change-promise-state.request';
-import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
-import { GetEntityManager } from 'src/common/decorator/get-query-runner';
-import { EntityManager } from 'typeorm';
 import { GetPromiseBodyRequest } from './dto/request/get-promise-body.request';
 
 @Controller('promise')
@@ -26,24 +22,18 @@ export class PromiseController {
   constructor(private readonly promiseService: PromiseService) {}
 
   @Post()
-  @UseInterceptors(TransactionInterceptor)
   create(
-    @GetEntityManager() entityManager: EntityManager,
     @GetUserEmail() userEmail: string,
     @Body() createPromiseRequest: CreatePromiseRequest,
   ) {
-    return this.promiseService.createPromise(
-      entityManager,
-      userEmail,
-      createPromiseRequest,
-    );
+    return this.promiseService.createPromise(userEmail, createPromiseRequest);
   }
 
   @Get()
   findAll(
     @GetUserEmail() userEmail: string,
     @Query() getPromsieRequest: GetPromsiesRequest,
-    @Body() getPromiseBodyRequest: GetPromiseBodyRequest
+    @Body() getPromiseBodyRequest: GetPromiseBodyRequest,
   ) {
     return this.promiseService.getPromises(
       userEmail,
@@ -53,15 +43,12 @@ export class PromiseController {
   }
 
   @Patch('/:id')
-  @UseInterceptors(TransactionInterceptor)
   update(
-    @GetEntityManager() entityManager: EntityManager,
     @Param('id', UUIDCheckPipe) id: string,
     @GetUserEmail() userEmail: string,
     @Body() updatePromiseRequest: UpdatePromiseRequest,
   ) {
     return this.promiseService.updatePromise(
-      entityManager,
       id,
       userEmail,
       updatePromiseRequest,
@@ -69,16 +56,14 @@ export class PromiseController {
   }
 
   @Delete('/:id')
-  @UseInterceptors(TransactionInterceptor)
   delete(
-    @GetEntityManager() entityManager: EntityManager,
     @Param('id', UUIDCheckPipe) id: string,
     @GetUserEmail() userEmail: string,
   ) {
-    return this.promiseService.deletePromise(entityManager, id, userEmail);
+    return this.promiseService.deletePromise(id, userEmail);
   }
 
-  @Patch('/:id/state')
+  @Patch('/state/:id')
   changeState(
     @Param('id', UUIDCheckPipe) id: string,
     @GetUserEmail() userEmail: string,

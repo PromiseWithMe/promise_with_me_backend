@@ -20,21 +20,22 @@ export class PromiseService {
   constructor(
     @InjectRepository(Promise)
     private readonly promiseRepository: Repository<Promise>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async createPromise(
-    entityManager: EntityManager,
     userEmail: string,
     createPromiseRequest: CreatePromiseRequest,
   ) {
     const { title, dayOfWeek } = createPromiseRequest;
 
-    const user = await entityManager.findOne(User, {
+    const user = await this.userRepository.findOne({
       where: { email: userEmail },
     });
     if (!user) throw new UserNotFoundException();
 
-    await entityManager.save(Promise, {
+    await this.promiseRepository.save({
       title,
       dayOfWeek: dayOfWeek.join(','),
       user,
@@ -76,19 +77,17 @@ export class PromiseService {
   }
 
   async updatePromise(
-    entityManager: EntityManager,
     promiseId: string,
     userEmail: string,
     updatePromiseRequest: UpdatePromiseRequest,
   ) {
     const { title, dayOfWeek } = updatePromiseRequest;
 
-    const result = await entityManager.update(
-      Promise,
+    const result = await this.promiseRepository.update(
       { id: promiseId, user: { email: userEmail } },
       {
         title,
-        dayOfWeek: dayOfWeek ? dayOfWeek.join(',') : null,
+        dayOfWeek: dayOfWeek ? dayOfWeek.join(',') : undefined,
       },
     );
 
@@ -100,11 +99,10 @@ export class PromiseService {
   }
 
   async deletePromise(
-    entityManager: EntityManager,
     promiseId: string,
     userEmail: string,
   ) {
-    const result = await entityManager.delete(Promise, {
+    const result = await this.promiseRepository.delete({
       id: promiseId,
       user: { email: userEmail },
     });
