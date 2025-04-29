@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { Socket } from 'socket.io';
-import { EnvKeys } from 'src/common/enum/env-keys';
 import { ChatGPTException } from 'src/exception/ws-custom-exception/chat-gpt.exception';
 import { Chat } from './entity/chat.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,27 +11,17 @@ import { Promise } from 'src/promise/entity/promise.entity';
 import { PromiseNotFoundException } from 'src/exception/ws-custom-exception/promise-not-found.exception';
 import { SaveChatErrorException } from 'src/exception/ws-custom-exception/save-chat-error.exception';
 import { generateToday } from 'src/common/util/generate-today';
-import { User } from 'src/user/entity/user.entity';
 import { FindChatsReponse } from './dto/response/find-chats.response';
 
 @Injectable()
 export class ChatService {
-  private openai: OpenAI;
-
   constructor(
     @InjectRepository(Promise)
     private readonly promiseRepository: Repository<Promise>,
     @InjectRepository(Chat)
     private readonly chatRepository: Repository<Chat>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-
-    private configService: ConfigService,
-  ) {
-    this.openai = new OpenAI({
-      apiKey: this.configService.get(EnvKeys.CHAT_GPT_KEY),
-    });
-  }
+    private readonly openai: OpenAI,
+  ) {}
 
   async wellPromise(
     userEmail: string,
