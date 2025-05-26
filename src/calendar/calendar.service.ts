@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promise as PromiseEntity } from 'src/promise/entity/promise.entity';
-import { EntityManager, In, Repository } from 'typeorm';
+import { Brackets, EntityManager, In, Repository } from 'typeorm';
 import { SuccessPromise } from './entity/success-promise.entity';
 import { Calendar } from './entity/calendar.entity';
 import { PromiseState } from 'src/common/enum/promise-state';
@@ -34,13 +34,15 @@ export class CalendarService {
     const endDate = new Date(year, month, 1);
 
     try {
-      return await this.calendarRepository
-        .createQueryBuilder('calendar')
-        .leftJoinAndSelect('calendar.successPromises', 'successPromise')
-        .where('calendar.userEmail = :userEmail', { userEmail })
-        .andWhere('calendar.date >= :startDate', { startDate })
-        .andWhere('calendar.date < :endDate', { endDate })
-        .getMany();
+      return {
+        calendars: await this.calendarRepository
+          .createQueryBuilder('calendar')
+          .leftJoinAndSelect('calendar.successPromises', 'successPromise')
+          .where('calendar.userEmail = :userEmail', { userEmail })
+          .andWhere('calendar.date >= :startDate', { startDate })
+          .andWhere('calendar.date < :endDate', { endDate })
+          .getMany(),
+      };
     } catch (error) {
       throw new ServerException();
     }
@@ -48,15 +50,17 @@ export class CalendarService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async saveCalendar(qr: EntityManager) {
+    const today = new Date(generateToday());
+    const todayDay = dayOfWeeks[today.getDay()];
+
     const completePromisesUsers = await this.promiseRepository
       .createQueryBuilder('p')
       .select('DISTINCT p.userEmail', 'userEmail')
       .where('p.promiseState = :state', {
         state: PromiseState.Completed.toString(),
       })
-      .andWhere('find_in_set(:day, p.dayOfWeek)', {
-        day: dayOfWeeks[new Date(generateToday()).getDay()],
-      })
+      .andWhere('find_in_set(:day, p.dayOfWeek)', { day: todayDay })
+      .orWhere('p.dayOfWeek IS NULL')
       .getRawMany();
 
     const userEmails = completePromisesUsers.map((u) => u.userEmail);
@@ -71,33 +75,53 @@ export class CalendarService {
       const user = userMap.get(userEmail);
       if (!user) continue;
 
-      const calendar = await qr.save(Calendar, {
-        diary: await this.redisClient.get(`${user.email}_diary`),
-        date: new Date(generateToday()),
-        user,
-      });
+      const diaryKey = `${user.email}_diary`;
+      const diary = await this.redisClient.get(diaryKey);
 
       const completedPromises = await this.promiseRepository
         .createQueryBuilder('p')
-        .select('p.title', 'title')
+        .select(['p.title AS title', 'p.dayOfWeek AS dayOfWeek', 'p.id AS id'])
         .where('p.userEmail = :userEmail', { userEmail })
         .andWhere('p.promiseState = :state', {
           state: PromiseState.Completed.toString(),
         })
-        .andWhere('find_in_set(:day, p.dayOfWeek)', {
-          day: dayOfWeeks[new Date(generateToday()).getDay()],
-        })
-        .orWhere('p.dayOfWeek is null')
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where('find_in_set(:day, p.dayOfWeek)', {
+              day: todayDay,
+            }).orWhere('p.dayOfWeek IS NULL');
+          }),
+        )
         .getRawMany();
 
-      await Promise.all(
-        completedPromises.map(({ title }) => {
-          qr.save(SuccessPromise, {
-            title,
-            calendar,
+      if (!diary && completedPromises.length === 0) continue;
+
+      const calendar = await qr.save(Calendar, {
+        diary: diary ?? null,
+        date: today,
+        user: { email: user.email },
+      });
+
+      if (diary) {
+        await this.redisClient.del(diaryKey);
+      }
+
+      for (const { title } of completedPromises) {
+        await qr.save(SuccessPromise, {
+          title,
+          calendar: { id: calendar.id },
+        });
+      }
+
+      for (const { id, dayOfWeek } of completedPromises) {
+        if (!dayOfWeek) {
+          await this.promiseRepository.delete(id);
+        } else {
+          await this.promiseRepository.update(id, {
+            promiseState: PromiseState.NotCompleted,
           });
-        }),
-      );
+        }
+      }
     }
   }
 }
