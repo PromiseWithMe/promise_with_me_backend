@@ -14,12 +14,15 @@ import { ChangePromiseStateRequest } from './dto/request/change-promise-state.re
 import { GetPromisesResponse } from './dto/response/get-promises.response';
 import { GetPromiseBodyRequest } from './dto/request/get-promise-body.request';
 import { generateToday } from 'src/common/util/generate-today';
+import { Chat } from 'src/chat/entity/chat.entity';
 
 @Injectable()
 export class PromiseService {
   constructor(
     @InjectRepository(Promise)
     private readonly promiseRepository: Repository<Promise>,
+    @InjectRepository(Chat)
+    private readonly chatRepository: Repository<Chat>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
@@ -102,14 +105,17 @@ export class PromiseService {
     promiseId: string,
     userEmail: string,
   ) {
-    const result = await this.promiseRepository.delete({
+    const promise = await this.promiseRepository.findOne({
+      where: { id: promiseId, user: { email: userEmail } },
+    });
+    if (!promise) throw new PromiseNotFoundException();
+
+
+    await this.chatRepository.delete({ promise: { id: promiseId } });
+    await this.promiseRepository.delete({
       id: promiseId,
       user: { email: userEmail },
     });
-
-    if (result.affected === 0) {
-      throw new PromiseNotFoundException();
-    }
 
     return true;
   }
