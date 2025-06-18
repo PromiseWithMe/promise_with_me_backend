@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promise } from './entity/promise.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreatePromiseRequest } from './dto/request/create-promise.request';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/custom-exception/user-not-found.exception';
@@ -13,7 +13,6 @@ import { PromiseState } from 'src/common/enum/promise-state';
 import { ChangePromiseStateRequest } from './dto/request/change-promise-state.request';
 import { GetPromisesResponse } from './dto/response/get-promises.response';
 import { GetPromiseBodyRequest } from './dto/request/get-promise-body.request';
-import { generateToday } from 'src/common/util/generate-today';
 import { Chat } from 'src/chat/entity/chat.entity';
 
 @Injectable()
