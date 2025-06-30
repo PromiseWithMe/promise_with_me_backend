@@ -8,4 +8,8 @@ export class LoginRequest {
   @IsNotEmpty({ message: '비밀번호는 비어있을 수 없습니다.' })
   @IsString()
   password: string;
+
+  @IsNotEmpty({ message: '디바이스토큰은 비어있을 수 없습니다.' })
+  @IsString()
+  deviceToken: string;
 }

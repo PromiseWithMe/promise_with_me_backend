@@ -16,6 +16,11 @@ export class User {
   password: string;
 
   @Column({
+    nullable: false,
+  })
+  deviceToken: string;
+
+  @Column({
     length: 30,
     nullable: false,
   })

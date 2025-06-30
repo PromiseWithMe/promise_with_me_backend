@@ -9,6 +9,10 @@ export class RegisterRequest {
   @IsString()
   password: string;
 
+  @IsNotEmpty({ message: '디바이스토큰은 비어있을 수 없습니다.' })
+  @IsString()
+  deviceToken: string;
+
   @Length(1, 10, { message: '닉네임은 1~10자 사이로 입력해주세요.' })
   @IsNotEmpty({ message: '닉네임은 비어있을 수 없습니다.' })
   @IsString()

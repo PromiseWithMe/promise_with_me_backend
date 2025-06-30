@@ -45,7 +45,7 @@ export class AuthService {
   }
 
   async register(registerRequest: RegisterRequest) {
-    const { email, nickname, password } = registerRequest;
+    const { email, nickname, password, deviceToken } = registerRequest;
 
     const user = await this.userRepository.findOne({
       where: { email },
@@ -57,6 +57,7 @@ export class AuthService {
       email,
       password: await bcrypt.hash(password, 10),
       nickname,
+      deviceToken,
       createdAt: generateToday(),
     });
     await this.userRepository.save(newUser);
@@ -65,7 +66,7 @@ export class AuthService {
   }
 
   async login(loginRequest: LoginRequest) {
-    const { email, password } = loginRequest;
+    const { email, password, deviceToken } = loginRequest;
 
     const user = await this.userRepository.findOne({
       where: { email },
@@ -76,6 +77,8 @@ export class AuthService {
     if (!(await bcrypt.compare(password, user.password))) {
       throw new LoginFailException();
     }
+
+    await this.userRepository.update({ email }, { deviceToken });
 
     return this._generateToken(email);
   }

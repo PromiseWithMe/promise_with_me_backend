@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Promise } from './entity/promise.entity';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { CreatePromiseRequest } from './dto/request/create-promise.request';
 import { User } from 'src/user/entity/user.entity';
 import { UserNotFoundException } from 'src/exception/custom-exception/user-not-found.exception';
@@ -14,6 +14,10 @@ import { ChangePromiseStateRequest } from './dto/request/change-promise-state.re
 import { GetPromisesResponse } from './dto/response/get-promises.response';
 import { GetPromiseBodyRequest } from './dto/request/get-promise-body.request';
 import { Chat } from 'src/chat/entity/chat.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { FcmService } from 'src/fcm/fcm.service';
+import { generateToday } from 'src/common/util/generate-today';
+import { dayOfWeeks } from 'src/common/set/day-of-weeks';
 
 @Injectable()
 export class PromiseService {
@@ -24,6 +28,7 @@ export class PromiseService {
     private readonly chatRepository: Repository<Chat>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly fcmService: FcmService,
   ) {}
 
   async createPromise(
@@ -134,5 +139,41 @@ export class PromiseService {
     }
 
     return true;
+  }
+
+  // @Cron('*/10 * * * * *')
+  @Cron('0 * * * *')
+  async notifyUnfinishedPromises() {
+    const today = new Date(generateToday());
+    const todayDay = dayOfWeeks[today.getDay()];
+    // DB에서 오늘 요일에 할당된, 완료되지 않은 약속을 찾음
+    const unfinishedPromises = await this.promiseRepository
+      .createQueryBuilder('p')
+      .select('DISTINCT p.userEmail', 'userEmail')
+      .where('p.promiseState = :state', { state: PromiseState.NotCompleted })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('find_in_set(:day, p.dayOfWeek)', { day: todayDay }).orWhere(
+            'p.dayOfWeek = :dayOfWeekNull',
+            { dayOfWeekNull: '' },
+          );
+      }),
+    ).getRawMany();
+
+    for (const promise of unfinishedPromises) {
+      // 유저의 FCM 토큰이 있다고 가정
+      const userEmail = promise.user;
+      const user = await this.userRepository.findOne({
+        where: { email: userEmail },
+      });
+      
+      if (user.deviceToken) {
+        await this.fcmService.fcm(
+          user.deviceToken,
+          '아직 완료되지 않은 약속이 있어요!',
+          `오늘 할당된 약속을 모두 완료해주세요!`
+        );
+      }
+    }
   }
 }
